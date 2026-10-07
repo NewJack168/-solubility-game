@@ -8,167 +8,131 @@
 
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-<title>晶體射擊大作戰</title>
+<title>晶體射擊大作戰 MAX</title>
 
 <style>
 
 html,body{
 
-  margin:0;
+  margin:0;width:100%;height:100%;overflow:hidden;background:#050b16;color:#fff;
 
-  width:100%;
-
-  height:100%;
-
-  overflow:hidden;
-
-  background:#07111f;
-
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-
-  color:white;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
 
 }
 
-canvas{
-
-  display:block;
-
-  width:100%;
-
-  height:100%;
-
-  touch-action:none;
-
-}
+#game{display:block;width:100%;height:100%;touch-action:none}
 
 #hud{
 
-  position:absolute;
+  position:absolute;left:8px;right:8px;top:8px;display:flex;gap:6px;
 
-  top:12px;
-
-  left:10px;
-
-  right:10px;
-
-  display:flex;
-
-  justify-content:space-between;
-
-  pointer-events:none;
+  justify-content:space-between;pointer-events:none;z-index:3;
 
 }
 
-.info{
+.chip{
 
-  background:rgba(0,0,0,.5);
+  background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.16);
 
-  padding:8px 12px;
+  border-radius:14px;padding:7px 9px;font-size:13px;font-weight:900;
 
-  border-radius:15px;
-
-  font-weight:bold;
+  backdrop-filter:blur(6px);white-space:nowrap;
 
 }
+
+#bossWrap{
+
+  position:absolute;top:54px;left:8%;right:8%;z-index:3;pointer-events:none;
+
+  display:none;text-align:center;font-weight:900;font-size:13px;
+
+}
+
+#bossBar{height:13px;border-radius:99px;background:#3b1020;overflow:hidden;border:1px solid #ff7b9a}
+
+#bossFill{height:100%;width:100%;background:linear-gradient(90deg,#ff2d55,#ff9f0a)}
+
+#skills{
+
+  position:absolute;left:8px;right:8px;bottom:14px;display:grid;grid-template-columns:repeat(3,1fr);
+
+  gap:8px;z-index:4;
+
+}
+
+.skill{
+
+  border:1px solid rgba(255,255,255,.18);background:rgba(12,30,58,.88);color:#fff;
+
+  border-radius:16px;padding:11px 5px;font-weight:900;font-size:14px;
+
+  backdrop-filter:blur(8px);
+
+}
+
+.skill:disabled{opacity:.38}
 
 .screen{
 
-  position:absolute;
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
 
-  inset:0;
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-  background:rgba(0,0,0,.75);
-
-  padding:20px;
+  background:rgba(2,7,16,.78);backdrop-filter:blur(6px);z-index:10;padding:18px;
 
 }
 
 .panel{
 
-  width:min(90%,500px);
+  width:min(92vw,520px);background:linear-gradient(180deg,#12294e,#0b172b);
 
-  background:#10264a;
+  border:1px solid rgba(255,255,255,.16);border-radius:24px;padding:22px;text-align:center;
 
-  border-radius:25px;
-
-  padding:25px;
-
-  text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.5)
 
 }
 
-button{
+h1{margin:0 0 10px;font-size:32px}
 
-  width:100%;
+h2{line-height:1.45}
 
-  padding:15px;
+p{line-height:1.7}
 
-  margin-top:12px;
+button{font-family:inherit}
 
-  font-size:18px;
+.primary,.ans{
 
-  font-weight:bold;
+  width:100%;border:0;border-radius:16px;padding:14px 12px;margin-top:10px;
 
-  border:0;
-
-  border-radius:15px;
-
-  background:#2f80ff;
-
-  color:white;
+  font-size:17px;font-weight:900;color:#fff;background:#2676ff
 
 }
 
-.answer{
+.ans{background:#183a68;border:1px solid rgba(255,255,255,.12)}
 
-  background:#234671;
+.hidden{display:none!important}
 
-}
+#banner{
 
-.hidden{
+  position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);
 
-  display:none;
+  font-size:34px;font-weight:1000;text-shadow:0 4px 18px #000;z-index:5;
 
-}
-
-#hint{
-
-  position:absolute;
-
-  bottom:18px;
-
-  width:100%;
-
-  text-align:center;
-
-  font-size:14px;
-
-  opacity:.8;
-
-  pointer-events:none;
+  opacity:0;pointer-events:none;transition:opacity .2s;text-align:center;width:90%
 
 }
 
-#flash{
+#toast{
 
-  position:absolute;
+  position:absolute;left:50%;bottom:88px;transform:translateX(-50%);
 
-  inset:0;
+  background:rgba(0,0,0,.68);border:1px solid rgba(255,255,255,.15);
 
-  background:white;
+  border-radius:999px;padding:8px 13px;font-size:13px;font-weight:800;
 
-  opacity:0;
-
-  pointer-events:none;
+  z-index:6;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;
 
 }
+
+.small{opacity:.78;font-size:14px}
 
 </style>
 
@@ -180,39 +144,57 @@ button{
 
 <div id="hud">
 
-  <div class="info">🏆 <span id="score">0</span></div>
+  <div class="chip">關卡 <span id="stage">1</span>/5</div>
 
-  <div class="info">🔥 <span id="combo">0</span></div>
+  <div class="chip">🏆 <span id="score">0</span></div>
 
-  <div class="info">❤️ <span id="life">3</span></div>
+  <div class="chip">🔥 <span id="combo">0</span></div>
+
+  <div class="chip">❤️ <span id="life">3</span></div>
 
 </div>
 
-<div id="hint">直接點怪物射擊！金色怪物有獎勵</div>
+<div id="bossWrap">
 
-<div id="flash"></div>
+  👹 <span id="bossName">BOSS</span>
+
+  <div id="bossBar"><div id="bossFill"></div></div>
+
+</div>
+
+<div id="skills">
+
+  <button class="skill" id="bombBtn" onclick="useSkill('bomb')">💣 爆破 ×<span id="bombN">1</span></button>
+
+  <button class="skill" id="freezeBtn" onclick="useSkill('freeze')">❄️ 冰凍 ×<span id="freezeN">1</span></button>
+
+  <button class="skill" id="shieldBtn" onclick="useSkill('shield')">🛡️ 護盾 ×<span id="shieldN">0</span></button>
+
+</div>
+
+<div id="banner"></div>
+
+<div id="toast"></div>
 
 <div id="start" class="screen">
 
   <div class="panel">
 
-    <h1>🔫 晶體射擊大作戰</h1>
+    <h1>🔫 晶體射擊大作戰 MAX</h1>
 
     <p>
 
-      怪物正在入侵實驗室！<br><br>
+      點怪物直接開槍！<br>
 
-      👆 點怪物射擊<br>
+      每關最後都有 <b>BOSS</b>。怪物會掉寶，能拿到爆破、冰凍、護盾。<br>
 
-      🔥 連續擊殺增加 Combo<br>
-
-      ⭐ 金色怪物可以加血<br>
-
-      ⚡ 偶爾會出現簡單補給題
+      BOSS 打完才出一題超短理化補給題，題目會輪替，不會一直重複。
 
     </p>
 
-    <button onclick="startGame()">開始戰鬥</button>
+    <button class="primary" onclick="startGame()">開始闖關</button>
+
+    <div class="small">共 5 關｜手機直接點擊操作</div>
 
   </div>
 
@@ -222,7 +204,7 @@ button{
 
   <div class="panel">
 
-    <h2>⚡ 能量補給</h2>
+    <div class="small">⚡ BOSS 戰後補給題｜答對送技能＋200 分</div>
 
     <h2 id="question"></h2>
 
@@ -240,9 +222,25 @@ button{
 
     <p>最後分數</p>
 
-    <div id="final" style="font-size:60px;font-weight:bold"></div>
+    <div id="final" style="font-size:58px;font-weight:1000"></div>
 
-    <button onclick="startGame()">再玩一次</button>
+    <button class="primary" onclick="startGame()">再挑戰一次</button>
+
+  </div>
+
+</div>
+
+<div id="clear" class="screen hidden">
+
+  <div class="panel">
+
+    <h1>🏆 全部破關！</h1>
+
+    <p>5 隻 BOSS 全部擊破</p>
+
+    <div id="clearScore" style="font-size:58px;font-weight:1000"></div>
+
+    <button class="primary" onclick="startGame()">重新闖關</button>
 
   </div>
 
@@ -254,19 +252,17 @@ const canvas=document.getElementById("game");
 
 const ctx=canvas.getContext("2d");
 
-let W=innerWidth;
-
-let H=innerHeight;
+let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio||1,2);
 
 function resize(){
 
-  W=innerWidth;
+  W=innerWidth; H=innerHeight; DPR=Math.min(devicePixelRatio||1,2);
 
-  H=innerHeight;
+  canvas.width=W*DPR; canvas.height=H*DPR;
 
-  canvas.width=W;
+  canvas.style.width=W+"px"; canvas.style.height=H+"px";
 
-  canvas.height=H;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
 
 }
 
@@ -274,191 +270,375 @@ resize();
 
 addEventListener("resize",resize);
 
-let enemies=[];
+const $=id=>document.getElementById(id);
 
-let particles=[];
+let audioCtx=null;
 
-let score=0;
+function tone(freq=500,dur=.06,type="square",vol=.035){
 
-let combo=0;
+  try{
 
-let life=3;
+    audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
 
-let kills=0;
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
 
-let running=false;
+    o.type=type;o.frequency.value=freq;g.gain.value=vol;
 
-let spawnTime=0;
+    o.connect(g);g.connect(audioCtx.destination);
 
-let difficulty=850;
+    o.start();
+
+    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);
+
+    o.stop(audioCtx.currentTime+dur);
+
+  }catch(e){}
+
+}
+
+function gunSound(){ tone(150,.035,"square",.045); setTimeout(()=>tone(80,.05,"sawtooth",.02),18); }
+
+function hitSound(){ tone(720,.045,"sine",.035); }
+
+function bossSound(){ tone(105,.12,"sawtooth",.05); }
+
+function lootSound(){ tone(1050,.1,"sine",.045); }
+
+let mode="start";
+
+let enemies=[],particles=[],tracers=[],loots=[];
+
+let score=0,combo=0,life=3,stage=1,stageKills=0;
+
+let boss=null,lastSpawn=0;
+
+let freezeUntil=0,shieldUntil=0;
+
+let skills={bomb:1,freeze:1,shield:0};
+
+const maxStage=5;
+
+const bossNames=["鹽晶獸","熔解巨像","汽泡魔王","飽和暴君","終極晶核王"];
+
+function targetKills(){ return 12+stage*3; }
+
+function spawnGap(){ return Math.max(330,780-stage*75); }
 
 function updateHUD(){
 
-  document.getElementById("score").textContent=score;
+  $("stage").textContent=stage;
 
-  document.getElementById("combo").textContent=combo;
+  $("score").textContent=score;
 
-  document.getElementById("life").textContent=life;
+  $("combo").textContent=combo;
+
+  $("life").textContent=life;
+
+  $("bombN").textContent=skills.bomb;
+
+  $("freezeN").textContent=skills.freeze;
+
+  $("shieldN").textContent=skills.shield;
+
+  $("bombBtn").disabled=skills.bomb<=0||mode!=="play";
+
+  $("freezeBtn").disabled=skills.freeze<=0||mode!=="play";
+
+  $("shieldBtn").disabled=skills.shield<=0||mode!=="play";
+
+  if(boss){
+
+    $("bossWrap").style.display="block";
+
+    $("bossName").textContent=bossNames[stage-1];
+
+    $("bossFill").style.width=Math.max(0,boss.hp/boss.maxHp*100)+"%";
+
+  }else $("bossWrap").style.display="none";
+
+}
+
+function toast(msg){
+
+  $("toast").textContent=msg;$("toast").style.opacity=1;
+
+  clearTimeout(toast.t);toast.t=setTimeout(()=>$("toast").style.opacity=0,1100);
+
+}
+
+function banner(msg,ms=1000){
+
+  $("banner").innerHTML=msg;$("banner").style.opacity=1;
+
+  clearTimeout(banner.t);banner.t=setTimeout(()=>$("banner").style.opacity=0,ms);
 
 }
 
 function startGame(){
 
-  score=0;
+  score=0;combo=0;life=3;stage=1;stageKills=0;
 
-  combo=0;
+  enemies=[];particles=[];tracers=[];loots=[];boss=null;
 
-  life=3;
+  skills={bomb:1,freeze:1,shield:0};
 
-  kills=0;
+  freezeUntil=0;shieldUntil=0;
 
-  enemies=[];
+  mode="play";
 
-  particles=[];
+  $("start").classList.add("hidden");
 
-  difficulty=850;
+  $("over").classList.add("hidden");
+
+  $("clear").classList.add("hidden");
+
+  $("quiz").classList.add("hidden");
+
+  lastSpawn=performance.now();
+
+  banner("第 1 關",900);
 
   updateHUD();
-
-  document.getElementById("start").classList.add("hidden");
-
-  document.getElementById("over").classList.add("hidden");
-
-  document.getElementById("quiz").classList.add("hidden");
-
-  running=true;
-
-  spawnTime=performance.now();
-
-  requestAnimationFrame(loop);
 
 }
 
 function spawnEnemy(){
 
-  const gold=Math.random()<0.12;
+  const r=Math.random();
+
+  const kind=r<.10?"gold":r<.25?"tank":"normal";
+
+  const radius=kind==="tank"?32:kind==="gold"?25:23+Math.random()*7;
 
   enemies.push({
 
-    x:40+Math.random()*(W-80),
+    x:radius+Math.random()*(W-radius*2),y:-radius,r:radius,
 
-    y:-40,
+    speed:(1.25+Math.random()*1.2+stage*.12)*(kind==="tank"?.72:1),
 
-    r:gold?27:24+Math.random()*10,
+    hp:kind==="tank"?3:1,maxHp:kind==="tank"?3:1,
 
-    speed:1.4+Math.random()*1.5,
-
-    gold:gold,
-
-    move:Math.random()*6
+    kind,phase:Math.random()*6.28
 
   });
 
 }
 
-function explosion(x,y,color){
+function spawnBoss(){
 
-  for(let i=0;i<18;i++){
+  if(boss)return;
 
-    const a=Math.random()*Math.PI*2;
+  enemies=[];
 
-    const s=1+Math.random()*4;
+  boss={
 
-    particles.push({
+    x:W/2,y:110,r:58,
 
-      x:x,
+    hp:24+stage*12,maxHp:24+stage*12,
 
-      y:y,
+    vx:2.1+stage*.22,phase:0
 
-      vx:Math.cos(a)*s,
+  };
 
-      vy:Math.sin(a)*s,
+  bossSound();
 
-      life:1,
+  banner("⚠️ BOSS 出現！",1200);
 
-      color:color
+  updateHUD();
 
-    });
+}
+
+function burst(x,y,color,count=16){
+
+  for(let i=0;i<count;i++){
+
+    const a=Math.random()*Math.PI*2,s=1+Math.random()*4.8;
+
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,color,size:2+Math.random()*3});
 
   }
 
 }
 
-function flash(){
+function makeTracer(x,y){
 
-  const f=document.getElementById("flash");
-
-  f.style.opacity=".8";
-
-  setTimeout(()=>{
-
-    f.style.opacity="0";
-
-  },120);
+  tracers.push({x1:W/2,y1:H-45,x2:x,y2:y,life:1});
 
 }
 
-canvas.addEventListener("pointerdown",function(e){
+function maybeDrop(x,y,guaranteed=false){
 
-  if(!running)return;
+  if(!guaranteed && Math.random()>.20)return;
 
-  const x=e.clientX;
+  const pool=["coin","bomb","freeze","shield","heart"];
 
-  const y=e.clientY;
+  const type=pool[Math.floor(Math.random()*pool.length)];
+
+  loots.push({x,y,type,vy:1.25,life:900});
+
+}
+
+function collectLoot(l){
+
+  lootSound();
+
+  if(l.type==="coin"){score+=100;toast("🪙 +100 分");}
+
+  if(l.type==="heart"){life=Math.min(5,life+1);toast("❤️ 生命 +1");}
+
+  if(l.type==="bomb"){skills.bomb++;toast("💣 爆破 +1");}
+
+  if(l.type==="freeze"){skills.freeze++;toast("❄️ 冰凍 +1");}
+
+  if(l.type==="shield"){skills.shield++;toast("🛡️ 護盾 +1");}
+
+  updateHUD();
+
+}
+
+function useSkill(type){
+
+  if(mode!=="play"||skills[type]<=0)return;
+
+  skills[type]--;
+
+  if(type==="bomb"){
+
+    enemies.forEach(e=>burst(e.x,e.y,"#ffcc33",12));
+
+    score+=enemies.length*8;
+
+    enemies=[];
+
+    if(boss){
+
+      boss.hp-=8;
+
+      burst(boss.x,boss.y,"#ffcc33",30);
+
+      if(boss.hp<=0)defeatBoss();
+
+    }
+
+    tone(70,.25,"sawtooth",.07);
+
+    toast("💣 全畫面爆破！");
+
+  }
+
+  if(type==="freeze"){
+
+    freezeUntil=performance.now()+5000;
+
+    tone(900,.18,"sine",.045);
+
+    toast("❄️ 全場冰凍 5 秒");
+
+  }
+
+  if(type==="shield"){
+
+    shieldUntil=performance.now()+7000;
+
+    tone(520,.18,"sine",.045);
+
+    toast("🛡️ 護盾 7 秒");
+
+  }
+
+  updateHUD();
+
+}
+
+canvas.addEventListener("pointerdown",e=>{
+
+  if(mode!=="play")return;
+
+  const x=e.clientX,y=e.clientY;
+
+  gunSound();
+
+  makeTracer(x,y);
 
   let hit=false;
+
+  for(let i=loots.length-1;i>=0;i--){
+
+    const l=loots[i];
+
+    if(Math.hypot(x-l.x,y-l.y)<28){
+
+      hit=true;
+
+      collectLoot(l);
+
+      loots.splice(i,1);
+
+      return;
+
+    }
+
+  }
+
+  if(boss && Math.hypot(x-boss.x,y-boss.y)<boss.r*1.25){
+
+    hit=true;
+
+    boss.hp--;
+
+    combo++;
+
+    score+=6+Math.min(combo,25);
+
+    hitSound();
+
+    burst(x,y,"#ff5f7e",5);
+
+    if(boss.hp<=0)defeatBoss();
+
+    updateHUD();
+
+    return;
+
+  }
 
   for(let i=enemies.length-1;i>=0;i--){
 
     const m=enemies[i];
 
-    if(Math.hypot(x-m.x,y-m.y)<m.r*1.4){
+    if(Math.hypot(x-m.x,y-m.y)<m.r*1.3){
 
       hit=true;
 
-      combo++;
+      m.hp--;
 
-      kills++;
+      hitSound();
 
-      if(m.gold){
+      burst(x,y,m.kind==="gold"?"#ffd54a":"#67d8ff",6);
 
-        score+=80;
+      if(m.hp<=0){
 
-        life=Math.min(5,life+1);
+        enemies.splice(i,1);
 
-        flash();
+        combo++;
 
-      }else{
+        stageKills++;
 
-        score+=10+Math.min(combo,20)*2;
+        score+=(m.kind==="gold"?80:m.kind==="tank"?35:12)+Math.min(combo,20)*2;
+
+        maybeDrop(m.x,m.y,m.kind==="gold");
+
+        burst(m.x,m.y,m.kind==="gold"?"#ffd54a":"#67d8ff",14);
+
+        if(stageKills>=targetKills() && !boss){
+
+          spawnBoss();
+
+        }
 
       }
-
-      explosion(
-
-        m.x,
-
-        m.y,
-
-        m.gold?"gold":"cyan"
-
-      );
-
-      enemies.splice(i,1);
 
       updateHUD();
-
-      if(kills%12===0){
-
-        openQuiz();
-
-      }
-
-      if(kills%10===0){
-
-        difficulty=Math.max(320,difficulty-70);
-
-      }
 
       break;
 
@@ -476,279 +656,443 @@ canvas.addEventListener("pointerdown",function(e){
 
 });
 
-const quizList=[
+function defeatBoss(){
 
-  {
+  if(!boss)return;
 
-    q:"糖放進水裡看不見了，比較像哪一個？",
+  score+=500*stage;
 
-    a:["溶解","燃燒"],
+  burst(boss.x,boss.y,"#ff4f79",55);
 
-    c:0
+  boss=null;
 
-  },
+  tone(120,.28,"sawtooth",.06);
 
-  {
+  tone(720,.25,"sine",.04);
 
-    q:"糖通常在哪種水中溶得比較快？",
+  updateHUD();
 
-    a:["熱水","冰水"],
+  mode="quiz";
 
-    c:0
+  setTimeout(openQuiz,450);
 
-  },
+}
 
-  {
+const questions=[
 
-    q:"汽水打開後冒出的泡泡是？",
+ {q:"糖放進水裡慢慢看不見，這叫？",a:["溶解","燃燒","凝固"],c:0},
 
-    a:["氣體","石頭"],
+ {q:"想讓砂糖更快溶掉，哪個方法最有用？",a:["攪拌","放著不動","把水冰起來"],c:0},
 
-    c:0
+ {q:"把方糖磨成細粉再加水，通常會？",a:["溶得更快","完全不溶","變成氣體"],c:0},
 
-  },
+ {q:"大多數固體在熱水中，通常比冷水？",a:["較容易溶","較不容易溶","完全一樣"],c:0},
 
-  {
+ {q:"汽水打開後冒出很多泡泡，主要是？",a:["氣體跑出來","水變成鹽","杯子融化"],c:0},
 
-    q:"水已經溶不下更多鹽，叫做？",
+ {q:"水已經不能再溶更多鹽，這杯溶液可稱為？",a:["飽和溶液","純水","蒸餾水"],c:0},
 
-    a:["飽和","結冰"],
+ {q:"溶解度通常要指定什麼條件？",a:["溫度","顏色","杯子形狀"],c:0},
 
-    c:0
+ {q:"攪拌主要改變的是？",a:["溶解速度","物質種類","溶質質量"],c:0},
 
-  }
+ {q:"同溫度下，把水量變成 2 倍，最多可溶的溶質通常？",a:["也約變 2 倍","變 0","完全不變"],c:0},
+
+ {q:"熱的飽和溶液冷卻後出現晶體，最可能因為？",a:["溶解度下降","水突然變多","溶質消失"],c:0},
+
+ {q:"下列哪個比較像『溶質』？",a:["加入水中的糖","裝水的杯子","攪拌棒"],c:0},
+
+ {q:"糖水中的水通常叫做？",a:["溶劑","晶體","沉澱物"],c:0},
+
+ {q:"鹽完全溶在水中後，肉眼通常？",a:["看不到鹽顆粒","一定看到大晶體","看到煙"],c:0},
+
+ {q:"一般而言，氣體在較冷的水中通常？",a:["較容易溶解","一定完全不溶","會變成固體"],c:0},
+
+ {q:"汽水放暖後比較容易沒氣，和什麼有關？",a:["氣體溶解度降低","糖變多","瓶子變重"],c:0},
+
+ {q:"100 g 水最多可溶 30 g 某物質，加入 20 g 時通常？",a:["可以全部溶解","一定析出 20 g","水消失"],c:0},
+
+ {q:"100 g 水最多可溶 30 g 某物質，加入 40 g 時最多有多少 g 不溶？",a:["10 g","30 g","40 g"],c:0},
+
+ {q:"若溶液底部還有同種固體沒溶掉，最可能已經？",a:["接近或達到飽和","完全沒有溶質","變成純水"],c:0},
+
+ {q:"哪個動作通常不會改變固定溫度下的溶解度？",a:["攪拌","改變溫度","更換溶質"],c:0},
+
+ {q:"要從鹽水取得食鹽晶體，常見方法之一是？",a:["蒸發水分","加入更多水","一直稀釋"],c:0},
+
+ {q:"晶體析出時，析出的物質主要來自？",a:["原本溶在溶液中的溶質","空氣憑空產生","杯子表面"],c:0},
+
+ {q:"『30 g/100 g 水』比較像在表示？",a:["溶解度","密度","速度"],c:0},
+
+ {q:"不同物質在同一溫度下的溶解度？",a:["可能不同","一定相同","一定都是 100 g"],c:0},
+
+ {q:"想比較兩種物質的溶解度，最好先控制哪個條件相同？",a:["溫度","杯子顏色","桌子高度"],c:0}
 
 ];
 
+let qOrder=[];
+
+let qPos=0;
+
+let lastQ=-1;
+
+function shuffle(a){
+
+  for(let i=a.length-1;i>0;i--){
+
+    const j=Math.floor(Math.random()*(i+1));
+
+    [a[i],a[j]]=[a[j],a[i]];
+
+  }
+
+  return a;
+
+}
+
+function nextQuestion(){
+
+  if(qPos>=qOrder.length){
+
+    qOrder=shuffle([...questions.keys()]);
+
+    qPos=0;
+
+    if(qOrder.length>1 && qOrder[0]===lastQ){
+
+      [qOrder[0],qOrder[1]]=[qOrder[1],qOrder[0]];
+
+    }
+
+  }
+
+  const idx=qOrder[qPos++];
+
+  lastQ=idx;
+
+  return questions[idx];
+
+}
+
 function openQuiz(){
 
-  running=false;
+  const q=nextQuestion();
 
-  const q=quizList[
+  $("question").textContent=q.q;
 
-    Math.floor(Math.random()*quizList.length)
+  $("answers").innerHTML="";
 
-  ];
-
-  document.getElementById("question").textContent=q.q;
-
-  const box=document.getElementById("answers");
-
-  box.innerHTML="";
-
-  q.a.forEach((text,index)=>{
+  q.a.forEach((txt,i)=>{
 
     const b=document.createElement("button");
 
-    b.className="answer";
+    b.className="ans";
 
-    b.textContent=text;
+    b.textContent=txt;
 
-    b.onclick=function(){
+    b.onclick=()=>finishQuiz(i===q.c);
 
-      document.getElementById("quiz").classList.add("hidden");
-
-      if(index===q.c){
-
-        score+=100;
-
-        enemies.forEach(m=>{
-
-          explosion(m.x,m.y,"gold");
-
-        });
-
-        enemies=[];
-
-        flash();
-
-      }else{
-
-        combo=0;
-
-      }
-
-      updateHUD();
-
-      running=true;
-
-      spawnTime=performance.now();
-
-      requestAnimationFrame(loop);
-
-    };
-
-    box.appendChild(b);
+    $("answers").appendChild(b);
 
   });
 
-  document.getElementById("quiz").classList.remove("hidden");
+  $("quiz").classList.remove("hidden");
 
 }
 
-function gameOver(){
+function finishQuiz(ok){
 
-  running=false;
+  $("quiz").classList.add("hidden");
 
-  document.getElementById("final").textContent=score;
+  if(ok){
 
-  document.getElementById("over").classList.remove("hidden");
+    score+=200;
+
+    const choices=["bomb","freeze","shield"];
+
+    const got=choices[Math.floor(Math.random()*choices.length)];
+
+    skills[got]++;
+
+    toast("✅ 答對！+200 分＋技能");
+
+    tone(1100,.16,"sine",.05);
+
+  }else{
+
+    toast("❌ 沒關係，繼續下一關！");
+
+    tone(180,.14,"square",.04);
+
+  }
+
+  if(stage>=maxStage){
+
+    mode="clear";
+
+    $("clearScore").textContent=score;
+
+    $("clear").classList.remove("hidden");
+
+    updateHUD();
+
+    return;
+
+  }
+
+  stage++;
+
+  stageKills=0;
+
+  enemies=[];
+
+  loots=[];
+
+  boss=null;
+
+  mode="play";
+
+  lastSpawn=performance.now();
+
+  banner("第 "+stage+" 關",900);
+
+  updateHUD();
 
 }
 
-function loop(t){
+function loseLife(){
 
-  if(!running)return;
+  if(performance.now()<shieldUntil){
+
+    toast("🛡️ 護盾擋住傷害");
+
+    return;
+
+  }
+
+  life--;
+
+  combo=0;
+
+  updateHUD();
+
+  tone(120,.18,"sawtooth",.05);
+
+  if(life<=0){
+
+    mode="over";
+
+    $("final").textContent=score;
+
+    $("over").classList.remove("hidden");
+
+  }
+
+}
+
+function drawEnemy(m){
+
+  ctx.save();
+
+  ctx.translate(m.x,m.y);
+
+  ctx.shadowBlur=m.kind==="gold"?24:14;
+
+  ctx.shadowColor=m.kind==="gold"?"#ffd54a":"#4ecbff";
+
+  ctx.fillStyle=m.kind==="gold"?"#f5b700":m.kind==="tank"?"#8c5cff":"#2389ff";
+
+  ctx.beginPath();
+
+  ctx.arc(0,0,m.r,0,Math.PI*2);
+
+  ctx.fill();
+
+  ctx.shadowBlur=0;
 
   ctx.fillStyle="#07111f";
 
-  ctx.fillRect(0,0,W,H);
+  ctx.beginPath();
 
-  // 星空
+  ctx.arc(-8,-5,3,0,Math.PI*2);
 
-  for(let i=0;i<60;i++){
+  ctx.arc(8,-5,3,0,Math.PI*2);
 
-    ctx.fillStyle="rgba(255,255,255,.35)";
+  ctx.fill();
 
-    ctx.fillRect(
+  ctx.strokeStyle="#07111f";
 
-      (i*83)%W,
+  ctx.lineWidth=3;
 
-      (i*57+t*.02)%H,
+  ctx.beginPath();
 
-      2,
+  ctx.arc(0,8,8,Math.PI,0);
 
-      2
+  ctx.stroke();
 
-    );
+  if(m.kind==="gold"){
+
+    ctx.fillStyle="#fff";
+
+    ctx.font="20px sans-serif";
+
+    ctx.textAlign="center";
+
+    ctx.fillText("★",0,7);
 
   }
 
-  if(t-spawnTime>difficulty){
+  if(m.kind==="tank"){
+
+    ctx.fillStyle="#fff";
+
+    ctx.font="bold 12px sans-serif";
+
+    ctx.textAlign="center";
+
+    ctx.fillText("×"+m.hp,0,-m.r-7);
+
+  }
+
+  ctx.restore();
+
+}
+
+function drawBoss(){
+
+  if(!boss)return;
+
+  ctx.save();
+
+  ctx.translate(boss.x,boss.y);
+
+  ctx.shadowBlur=28;
+
+  ctx.shadowColor="#ff2d55";
+
+  ctx.fillStyle="#be2248";
+
+  ctx.beginPath();
+
+  ctx.arc(0,0,boss.r,0,Math.PI*2);
+
+  ctx.fill();
+
+  ctx.shadowBlur=0;
+
+  ctx.fillStyle="#fff";
+
+  ctx.font="34px sans-serif";
+
+  ctx.textAlign="center";
+
+  ctx.fillText("👹",0,12);
+
+  ctx.restore();
+
+}
+
+function drawLoot(l){
+
+  const icon={
+
+    coin:"🪙",
+
+    bomb:"💣",
+
+    freeze:"❄️",
+
+    shield:"🛡️",
+
+    heart:"❤️"
+
+  }[l.type];
+
+  ctx.font="25px sans-serif";
+
+  ctx.textAlign="center";
+
+  ctx.fillText(icon,l.x,l.y);
+
+}
+
+function update(t){
+
+  if(mode!=="play")return;
+
+  const frozen=t<freezeUntil;
+
+  if(!boss && stageKills<targetKills() && t-lastSpawn>spawnGap()){
 
     spawnEnemy();
 
-    spawnTime=t;
+    lastSpawn=t;
 
   }
 
-  // 怪物
+  if(!boss && stageKills>=targetKills()){
 
-  for(let i=enemies.length-1;i>=0;i--){
+    spawnBoss();
 
-    const m=enemies[i];
+  }
 
-    m.move+=.03;
+  if(!frozen){
 
-    m.x+=Math.sin(m.move)*.6;
+    for(let i=enemies.length-1;i>=0;i--){
 
-    m.y+=m.speed;
+      const m=enemies[i];
 
-    ctx.shadowBlur=20;
+      m.phase+=.035;
 
-    ctx.shadowColor=m.gold?"gold":"cyan";
+      m.x+=Math.sin(m.phase)*.45;
 
-    ctx.fillStyle=m.gold?"#ffca28":"#2997ff";
+      m.y+=m.speed;
 
-    ctx.beginPath();
+      if(m.y-m.r>H){
 
-    ctx.arc(
+        enemies.splice(i,1);
 
-      m.x,
+        loseLife();
 
-      m.y,
+        if(mode!=="play")return;
 
-      m.r,
-
-      0,
-
-      Math.PI*2
-
-    );
-
-    ctx.fill();
-
-    ctx.shadowBlur=0;
-
-    // 眼睛
-
-    ctx.fillStyle="#06111f";
-
-    ctx.beginPath();
-
-    ctx.arc(m.x-8,m.y-5,3,0,Math.PI*2);
-
-    ctx.arc(m.x+8,m.y-5,3,0,Math.PI*2);
-
-    ctx.fill();
-
-    // 嘴巴
-
-    ctx.strokeStyle="#06111f";
-
-    ctx.lineWidth=3;
-
-    ctx.beginPath();
-
-    ctx.arc(
-
-      m.x,
-
-      m.y+7,
-
-      8,
-
-      Math.PI,
-
-      0
-
-    );
-
-    ctx.stroke();
-
-    if(m.gold){
-
-      ctx.fillStyle="white";
-
-      ctx.font="20px sans-serif";
-
-      ctx.textAlign="center";
-
-      ctx.fillText(
-
-        "★",
-
-        m.x,
-
-        m.y+7
-
-      );
+      }
 
     }
 
-    if(m.y>H+50){
+    if(boss){
 
-      enemies.splice(i,1);
+      boss.x+=boss.vx;
 
-      life--;
+      if(boss.x<boss.r || boss.x>W-boss.r){
 
-      combo=0;
+        boss.vx*=-1;
 
-      updateHUD();
+      }
 
-      if(life<=0){
+      boss.phase+=.03;
 
-        gameOver();
+      boss.y=105+Math.sin(boss.phase)*20;
 
-        return;
+    }
+
+    for(let i=loots.length-1;i>=0;i--){
+
+      const l=loots[i];
+
+      l.y+=l.vy;
+
+      l.life--;
+
+      if(l.y>H-70 || l.life<=0){
+
+        loots.splice(i,1);
 
       }
 
     }
 
   }
-
-  // 爆炸粒子
 
   for(let i=particles.length-1;i>=0;i--){
 
@@ -758,31 +1102,11 @@ function loop(t){
 
     p.y+=p.vy;
 
+    p.vx*=.98;
+
+    p.vy*=.98;
+
     p.life-=.035;
-
-    ctx.globalAlpha=Math.max(0,p.life);
-
-    ctx.fillStyle=p.color;
-
-    ctx.beginPath();
-
-    ctx.arc(
-
-      p.x,
-
-      p.y,
-
-      4,
-
-      0,
-
-      Math.PI*2
-
-    );
-
-    ctx.fill();
-
-    ctx.globalAlpha=1;
 
     if(p.life<=0){
 
@@ -792,45 +1116,149 @@ function loop(t){
 
   }
 
-  // 玩家砲台
+  for(let i=tracers.length-1;i>=0;i--){
 
-  ctx.fillStyle="#a8ddff";
+    tracers[i].life-=.16;
+
+    if(tracers[i].life<=0){
+
+      tracers.splice(i,1);
+
+    }
+
+  }
+
+}
+
+function draw(t){
+
+  ctx.clearRect(0,0,W,H);
+
+  const grad=ctx.createLinearGradient(0,0,0,H);
+
+  grad.addColorStop(0,stage>=4?"#241027":"#0b1e3c");
+
+  grad.addColorStop(1,"#040913");
+
+  ctx.fillStyle=grad;
+
+  ctx.fillRect(0,0,W,H);
+
+  ctx.globalAlpha=.35;
+
+  for(let i=0;i<55;i++){
+
+    ctx.fillStyle="#fff";
+
+    ctx.fillRect(
+
+      (i*97)%W,
+
+      (i*53+t*.015*(1+i%3))%H,
+
+      1.5,
+
+      1.5
+
+    );
+
+  }
+
+  ctx.globalAlpha=1;
+
+  enemies.forEach(drawEnemy);
+
+  drawBoss();
+
+  loots.forEach(drawLoot);
+
+  for(const s of tracers){
+
+    ctx.globalAlpha=Math.max(0,s.life);
+
+    ctx.strokeStyle="#8ce8ff";
+
+    ctx.lineWidth=3;
+
+    ctx.beginPath();
+
+    ctx.moveTo(s.x1,s.y1);
+
+    ctx.lineTo(s.x2,s.y2);
+
+    ctx.stroke();
+
+  }
+
+  ctx.globalAlpha=1;
+
+  for(const p of particles){
+
+    ctx.globalAlpha=Math.max(0,p.life);
+
+    ctx.fillStyle=p.color;
+
+    ctx.beginPath();
+
+    ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+
+    ctx.fill();
+
+  }
+
+  ctx.globalAlpha=1;
+
+  ctx.fillStyle=performance.now()<shieldUntil?"#7df6ff":"#bfe7ff";
 
   ctx.beginPath();
 
-  ctx.arc(
-
-    W/2,
-
-    H-20,
-
-    28,
-
-    Math.PI,
-
-    0
-
-  );
+  ctx.arc(W/2,H-24,25,Math.PI,0);
 
   ctx.fill();
 
-  ctx.fillStyle="#2997ff";
+  ctx.fillStyle="#2c8cff";
 
-  ctx.fillRect(
+  ctx.fillRect(W/2-6,H-58,12,35);
 
-    W/2-6,
+  if(performance.now()<shieldUntil){
 
-    H-55,
+    ctx.strokeStyle="rgba(100,240,255,.7)";
 
-    12,
+    ctx.lineWidth=3;
 
-    35
+    ctx.beginPath();
 
-  );
+    ctx.arc(W/2,H-28,42,0,Math.PI*2);
+
+    ctx.stroke();
+
+  }
+
+  if(performance.now()<freezeUntil){
+
+    ctx.fillStyle="rgba(100,220,255,.08)";
+
+    ctx.fillRect(0,0,W,H);
+
+  }
+
+}
+
+function loop(t){
+
+  update(t);
+
+  draw(t);
 
   requestAnimationFrame(loop);
 
 }
+
+qOrder=shuffle([...questions.keys()]);
+
+updateHUD();
+
+requestAnimationFrame(loop);
 
 </script>
 
