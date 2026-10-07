@@ -6,85 +6,167 @@
 
 <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 
-<title>溶解度大挑戰</title>
+<title>晶體射擊大作戰</title>
 
 <style>
 
-body{
-
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-
-  background:#eef7ff;
-
-  text-align:center;
-
-  padding:20px;
+html,body{
 
   margin:0;
 
-}
+  width:100%;
 
-.box{
+  height:100%;
 
-  max-width:600px;
+  overflow:hidden;
 
-  margin:auto;
+  background:#07111f;
 
-  background:white;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 
-  padding:25px;
-
-  border-radius:20px;
-
-  box-shadow:0 5px 20px #aaa;
+  color:white;
 
 }
 
-h1{color:#1565c0}
-
-#question{
-
-  font-size:22px;
-
-  font-weight:bold;
-
-  margin:25px 0;
-
-}
-
-button{
+canvas{
 
   display:block;
 
   width:100%;
 
-  padding:15px;
+  height:100%;
 
-  margin:10px 0;
-
-  font-size:18px;
-
-  border:0;
-
-  border-radius:12px;
-
-  background:#dbeafe;
+  touch-action:none;
 
 }
 
-button:active{background:#93c5fd}
+#hud{
 
-#score{font-size:20px;color:#16a34a}
+  position:absolute;
 
-#result{
+  top:12px;
+
+  left:10px;
+
+  right:10px;
+
+  display:flex;
+
+  justify-content:space-between;
+
+  pointer-events:none;
+
+}
+
+.info{
+
+  background:rgba(0,0,0,.5);
+
+  padding:8px 12px;
+
+  border-radius:15px;
+
+  font-weight:bold;
+
+}
+
+.screen{
+
+  position:absolute;
+
+  inset:0;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  background:rgba(0,0,0,.75);
+
+  padding:20px;
+
+}
+
+.panel{
+
+  width:min(90%,500px);
+
+  background:#10264a;
+
+  border-radius:25px;
+
+  padding:25px;
+
+  text-align:center;
+
+}
+
+button{
+
+  width:100%;
+
+  padding:15px;
+
+  margin-top:12px;
 
   font-size:18px;
 
   font-weight:bold;
 
-  min-height:55px;
+  border:0;
+
+  border-radius:15px;
+
+  background:#2f80ff;
+
+  color:white;
+
+}
+
+.answer{
+
+  background:#234671;
+
+}
+
+.hidden{
+
+  display:none;
+
+}
+
+#hint{
+
+  position:absolute;
+
+  bottom:18px;
+
+  width:100%;
+
+  text-align:center;
+
+  font-size:14px;
+
+  opacity:.8;
+
+  pointer-events:none;
+
+}
+
+#flash{
+
+  position:absolute;
+
+  inset:0;
+
+  background:white;
+
+  opacity:0;
+
+  pointer-events:none;
 
 }
 
@@ -94,249 +176,661 @@ button:active{background:#93c5fd}
 
 <body>
 
-<div class="box">
+<canvas id="game"></canvas>
 
-<h1>🧪 溶解度大挑戰</h1>
+<div id="hud">
 
-<div id="score">分數：0</div>
+  <div class="info">🏆 <span id="score">0</span></div>
 
-<div id="question"></div>
+  <div class="info">🔥 <span id="combo">0</span></div>
 
-<div id="answers"></div>
+  <div class="info">❤️ <span id="life">3</span></div>
 
-<div id="result"></div>
+</div>
+
+<div id="hint">直接點怪物射擊！金色怪物有獎勵</div>
+
+<div id="flash"></div>
+
+<div id="start" class="screen">
+
+  <div class="panel">
+
+    <h1>🔫 晶體射擊大作戰</h1>
+
+    <p>
+
+      怪物正在入侵實驗室！<br><br>
+
+      👆 點怪物射擊<br>
+
+      🔥 連續擊殺增加 Combo<br>
+
+      ⭐ 金色怪物可以加血<br>
+
+      ⚡ 偶爾會出現簡單補給題
+
+    </p>
+
+    <button onclick="startGame()">開始戰鬥</button>
+
+  </div>
+
+</div>
+
+<div id="quiz" class="screen hidden">
+
+  <div class="panel">
+
+    <h2>⚡ 能量補給</h2>
+
+    <h2 id="question"></h2>
+
+    <div id="answers"></div>
+
+  </div>
+
+</div>
+
+<div id="over" class="screen hidden">
+
+  <div class="panel">
+
+    <h1>💥 GAME OVER</h1>
+
+    <p>最後分數</p>
+
+    <div id="final" style="font-size:60px;font-weight:bold"></div>
+
+    <button onclick="startGame()">再玩一次</button>
+
+  </div>
 
 </div>
 
 <script>
 
-const questions=[
+const canvas=document.getElementById("game");
 
-{
+const ctx=canvas.getContext("2d");
 
-q:"溶解度是指什麼？",
+let W=innerWidth;
 
-a:[
+let H=innerHeight;
 
-"100克溶液中的溶質質量",
+function resize(){
 
-"一定溫度下，100克溶劑最多能溶解的溶質質量",
+  W=innerWidth;
 
-"溶解需要的時間",
+  H=innerHeight;
 
-"溶液的總重量"
+  canvas.width=W;
 
-],
-
-c:1
-
-},
-
-{
-
-q:"20°C時某物質溶解度為30克，100克水最多可溶多少克？",
-
-a:["20克","30克","60克","130克"],
-
-c:1
-
-},
-
-{
-
-q:"20°C時溶解度30克，200克水最多可溶多少克？",
-
-a:["30克","45克","60克","90克"],
-
-c:2
-
-},
-
-{
-
-q:"飽和溶液再加入同種溶質會怎樣？",
-
-a:[
-
-"全部繼續溶解",
-
-"多餘的溶質無法溶解",
-
-"水會沸騰",
-
-"溶液會消失"
-
-],
-
-c:1
-
-},
-
-{
-
-q:"大多數固體的溶解度，溫度升高時通常會？",
-
-a:["增加","減少","不變","變成0"],
-
-c:0
-
-},
-
-{
-
-q:"氣體在水中的溶解度，溫度升高時通常會？",
-
-a:["增加","減少","完全不變","無限增加"],
-
-c:1
-
-},
-
-{
-
-q:"攪拌最主要的作用是什麼？",
-
-a:[
-
-"增加溶解度",
-
-"加快溶解速度",
-
-"減少溶解度",
-
-"增加溶質重量"
-
-],
-
-c:1
-
-},
-
-{
-
-q:"把糖磨成細粉再放入水中會？",
-
-a:[
-
-"溶解比較快",
-
-"溶解度變兩倍",
-
-"完全不能溶解",
-
-"水的重量變少"
-
-],
-
-c:0
-
-},
-
-{
-
-q:"60°C可溶80克，20°C只能溶30克。冷卻後最多析出多少克？",
-
-a:["30克","50克","80克","110克"],
-
-c:1
-
-},
-
-{
-
-q:"讓熱的飽和溶液產生晶體，常用的方法是？",
-
-a:["加熱","降溫","加水","不停攪拌"],
-
-c:1
+  canvas.height=H;
 
 }
 
-];
+resize();
 
-let n=0;
+addEventListener("resize",resize);
+
+let enemies=[];
+
+let particles=[];
 
 let score=0;
 
-function show(){
+let combo=0;
 
-if(n>=questions.length){
+let life=3;
 
-document.getElementById("question").innerHTML=
+let kills=0;
 
-"🎉 挑戰完成！<br><br>你的分數："+score+" 分";
+let running=false;
 
-document.getElementById("answers").innerHTML=
+let spawnTime=0;
 
-'<button onclick="location.reload()">再玩一次</button>';
+let difficulty=850;
 
-document.getElementById("result").innerHTML="";
+function updateHUD(){
 
-return;
+  document.getElementById("score").textContent=score;
+
+  document.getElementById("combo").textContent=combo;
+
+  document.getElementById("life").textContent=life;
 
 }
 
-let q=questions[n];
+function startGame(){
 
-document.getElementById("question").innerHTML=
+  score=0;
 
-"第 "+(n+1)+" 題<br><br>"+q.q;
+  combo=0;
 
-let html="";
+  life=3;
 
-q.a.forEach((x,i)=>{
+  kills=0;
 
-html+=
+  enemies=[];
 
-'<button onclick="answer('+i+')">'+x+'</button>';
+  particles=[];
+
+  difficulty=850;
+
+  updateHUD();
+
+  document.getElementById("start").classList.add("hidden");
+
+  document.getElementById("over").classList.add("hidden");
+
+  document.getElementById("quiz").classList.add("hidden");
+
+  running=true;
+
+  spawnTime=performance.now();
+
+  requestAnimationFrame(loop);
+
+}
+
+function spawnEnemy(){
+
+  const gold=Math.random()<0.12;
+
+  enemies.push({
+
+    x:40+Math.random()*(W-80),
+
+    y:-40,
+
+    r:gold?27:24+Math.random()*10,
+
+    speed:1.4+Math.random()*1.5,
+
+    gold:gold,
+
+    move:Math.random()*6
+
+  });
+
+}
+
+function explosion(x,y,color){
+
+  for(let i=0;i<18;i++){
+
+    const a=Math.random()*Math.PI*2;
+
+    const s=1+Math.random()*4;
+
+    particles.push({
+
+      x:x,
+
+      y:y,
+
+      vx:Math.cos(a)*s,
+
+      vy:Math.sin(a)*s,
+
+      life:1,
+
+      color:color
+
+    });
+
+  }
+
+}
+
+function flash(){
+
+  const f=document.getElementById("flash");
+
+  f.style.opacity=".8";
+
+  setTimeout(()=>{
+
+    f.style.opacity="0";
+
+  },120);
+
+}
+
+canvas.addEventListener("pointerdown",function(e){
+
+  if(!running)return;
+
+  const x=e.clientX;
+
+  const y=e.clientY;
+
+  let hit=false;
+
+  for(let i=enemies.length-1;i>=0;i--){
+
+    const m=enemies[i];
+
+    if(Math.hypot(x-m.x,y-m.y)<m.r*1.4){
+
+      hit=true;
+
+      combo++;
+
+      kills++;
+
+      if(m.gold){
+
+        score+=80;
+
+        life=Math.min(5,life+1);
+
+        flash();
+
+      }else{
+
+        score+=10+Math.min(combo,20)*2;
+
+      }
+
+      explosion(
+
+        m.x,
+
+        m.y,
+
+        m.gold?"gold":"cyan"
+
+      );
+
+      enemies.splice(i,1);
+
+      updateHUD();
+
+      if(kills%12===0){
+
+        openQuiz();
+
+      }
+
+      if(kills%10===0){
+
+        difficulty=Math.max(320,difficulty-70);
+
+      }
+
+      break;
+
+    }
+
+  }
+
+  if(!hit){
+
+    combo=0;
+
+    updateHUD();
+
+  }
 
 });
 
-document.getElementById("answers").innerHTML=html;
+const quizList=[
+
+  {
+
+    q:"糖放進水裡看不見了，比較像哪一個？",
+
+    a:["溶解","燃燒"],
+
+    c:0
+
+  },
+
+  {
+
+    q:"糖通常在哪種水中溶得比較快？",
+
+    a:["熱水","冰水"],
+
+    c:0
+
+  },
+
+  {
+
+    q:"汽水打開後冒出的泡泡是？",
+
+    a:["氣體","石頭"],
+
+    c:0
+
+  },
+
+  {
+
+    q:"水已經溶不下更多鹽，叫做？",
+
+    a:["飽和","結冰"],
+
+    c:0
+
+  }
+
+];
+
+function openQuiz(){
+
+  running=false;
+
+  const q=quizList[
+
+    Math.floor(Math.random()*quizList.length)
+
+  ];
+
+  document.getElementById("question").textContent=q.q;
+
+  const box=document.getElementById("answers");
+
+  box.innerHTML="";
+
+  q.a.forEach((text,index)=>{
+
+    const b=document.createElement("button");
+
+    b.className="answer";
+
+    b.textContent=text;
+
+    b.onclick=function(){
+
+      document.getElementById("quiz").classList.add("hidden");
+
+      if(index===q.c){
+
+        score+=100;
+
+        enemies.forEach(m=>{
+
+          explosion(m.x,m.y,"gold");
+
+        });
+
+        enemies=[];
+
+        flash();
+
+      }else{
+
+        combo=0;
+
+      }
+
+      updateHUD();
+
+      running=true;
+
+      spawnTime=performance.now();
+
+      requestAnimationFrame(loop);
+
+    };
+
+    box.appendChild(b);
+
+  });
+
+  document.getElementById("quiz").classList.remove("hidden");
 
 }
 
-function answer(i){
+function gameOver(){
 
-let q=questions[n];
+  running=false;
 
-if(i===q.c){
+  document.getElementById("final").textContent=score;
 
-score+=10;
-
-document.getElementById("result").innerHTML=
-
-"✅ 答對了！";
-
-document.getElementById("result").style.color="green";
-
-}else{
-
-document.getElementById("result").innerHTML=
-
-"❌ 答錯了！<br>正確答案："+q.a[q.c];
-
-document.getElementById("result").style.color="red";
+  document.getElementById("over").classList.remove("hidden");
 
 }
 
-document.getElementById("score").innerHTML=
+function loop(t){
 
-"分數："+score;
+  if(!running)return;
 
-n++;
+  ctx.fillStyle="#07111f";
 
-setTimeout(()=>{
+  ctx.fillRect(0,0,W,H);
 
-document.getElementById("result").innerHTML="";
+  // 星空
 
-show();
+  for(let i=0;i<60;i++){
 
-},1500);
+    ctx.fillStyle="rgba(255,255,255,.35)";
+
+    ctx.fillRect(
+
+      (i*83)%W,
+
+      (i*57+t*.02)%H,
+
+      2,
+
+      2
+
+    );
+
+  }
+
+  if(t-spawnTime>difficulty){
+
+    spawnEnemy();
+
+    spawnTime=t;
+
+  }
+
+  // 怪物
+
+  for(let i=enemies.length-1;i>=0;i--){
+
+    const m=enemies[i];
+
+    m.move+=.03;
+
+    m.x+=Math.sin(m.move)*.6;
+
+    m.y+=m.speed;
+
+    ctx.shadowBlur=20;
+
+    ctx.shadowColor=m.gold?"gold":"cyan";
+
+    ctx.fillStyle=m.gold?"#ffca28":"#2997ff";
+
+    ctx.beginPath();
+
+    ctx.arc(
+
+      m.x,
+
+      m.y,
+
+      m.r,
+
+      0,
+
+      Math.PI*2
+
+    );
+
+    ctx.fill();
+
+    ctx.shadowBlur=0;
+
+    // 眼睛
+
+    ctx.fillStyle="#06111f";
+
+    ctx.beginPath();
+
+    ctx.arc(m.x-8,m.y-5,3,0,Math.PI*2);
+
+    ctx.arc(m.x+8,m.y-5,3,0,Math.PI*2);
+
+    ctx.fill();
+
+    // 嘴巴
+
+    ctx.strokeStyle="#06111f";
+
+    ctx.lineWidth=3;
+
+    ctx.beginPath();
+
+    ctx.arc(
+
+      m.x,
+
+      m.y+7,
+
+      8,
+
+      Math.PI,
+
+      0
+
+    );
+
+    ctx.stroke();
+
+    if(m.gold){
+
+      ctx.fillStyle="white";
+
+      ctx.font="20px sans-serif";
+
+      ctx.textAlign="center";
+
+      ctx.fillText(
+
+        "★",
+
+        m.x,
+
+        m.y+7
+
+      );
+
+    }
+
+    if(m.y>H+50){
+
+      enemies.splice(i,1);
+
+      life--;
+
+      combo=0;
+
+      updateHUD();
+
+      if(life<=0){
+
+        gameOver();
+
+        return;
+
+      }
+
+    }
+
+  }
+
+  // 爆炸粒子
+
+  for(let i=particles.length-1;i>=0;i--){
+
+    const p=particles[i];
+
+    p.x+=p.vx;
+
+    p.y+=p.vy;
+
+    p.life-=.035;
+
+    ctx.globalAlpha=Math.max(0,p.life);
+
+    ctx.fillStyle=p.color;
+
+    ctx.beginPath();
+
+    ctx.arc(
+
+      p.x,
+
+      p.y,
+
+      4,
+
+      0,
+
+      Math.PI*2
+
+    );
+
+    ctx.fill();
+
+    ctx.globalAlpha=1;
+
+    if(p.life<=0){
+
+      particles.splice(i,1);
+
+    }
+
+  }
+
+  // 玩家砲台
+
+  ctx.fillStyle="#a8ddff";
+
+  ctx.beginPath();
+
+  ctx.arc(
+
+    W/2,
+
+    H-20,
+
+    28,
+
+    Math.PI,
+
+    0
+
+  );
+
+  ctx.fill();
+
+  ctx.fillStyle="#2997ff";
+
+  ctx.fillRect(
+
+    W/2-6,
+
+    H-55,
+
+    12,
+
+    35
+
+  );
+
+  requestAnimationFrame(loop);
 
 }
-
-show();
 
 </script>
 
