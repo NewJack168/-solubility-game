@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html lang="zh-Hant">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>溶解度大挑戰</title>
+
+<style>
+
+body{
+
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+
+  background:#eef7ff;
+
+  text-align:center;
+
+  padding:20px;
+
+  margin:0;
+
+}
+
+.box{
+
+  max-width:600px;
+
+  margin:auto;
+
+  background:white;
+
+  padding:25px;
+
+  border-radius:20px;
+
+  box-shadow:0 5px 20px #aaa;
+
+}
+
+h1{color:#1565c0}
+
+#question{
+
+  font-size:22px;
+
+  font-weight:bold;
+
+  margin:25px 0;
+
+}
+
+button{
+
+  display:block;
+
+  width:100%;
+
+  padding:15px;
+
+  margin:10px 0;
+
+  font-size:18px;
+
+  border:0;
+
+  border-radius:12px;
+
+  background:#dbeafe;
+
+}
+
+button:active{background:#93c5fd}
+
+#score{font-size:20px;color:#16a34a}
+
+#result{
+
+  font-size:18px;
+
+  font-weight:bold;
+
+  min-height:55px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+
+<h1>🧪 溶解度大挑戰</h1>
+
+<div id="score">分數：0</div>
+
+<div id="question"></div>
+
+<div id="answers"></div>
+
+<div id="result"></div>
+
+</div>
+
+<script>
+
+const questions=[
+
+{
+
+q:"溶解度是指什麼？",
+
+a:[
+
+"100克溶液中的溶質質量",
+
+"一定溫度下，100克溶劑最多能溶解的溶質質量",
+
+"溶解需要的時間",
+
+"溶液的總重量"
+
+],
+
+c:1
+
+},
+
+{
+
+q:"20°C時某物質溶解度為30克，100克水最多可溶多少克？",
+
+a:["20克","30克","60克","130克"],
+
+c:1
+
+},
+
+{
+
+q:"20°C時溶解度30克，200克水最多可溶多少克？",
+
+a:["30克","45克","60克","90克"],
+
+c:2
+
+},
+
+{
+
+q:"飽和溶液再加入同種溶質會怎樣？",
+
+a:[
+
+"全部繼續溶解",
+
+"多餘的溶質無法溶解",
+
+"水會沸騰",
+
+"溶液會消失"
+
+],
+
+c:1
+
+},
+
+{
+
+q:"大多數固體的溶解度，溫度升高時通常會？",
+
+a:["增加","減少","不變","變成0"],
+
+c:0
+
+},
+
+{
+
+q:"氣體在水中的溶解度，溫度升高時通常會？",
+
+a:["增加","減少","完全不變","無限增加"],
+
+c:1
+
+},
+
+{
+
+q:"攪拌最主要的作用是什麼？",
+
+a:[
+
+"增加溶解度",
+
+"加快溶解速度",
+
+"減少溶解度",
+
+"增加溶質重量"
+
+],
+
+c:1
+
+},
+
+{
+
+q:"把糖磨成細粉再放入水中會？",
+
+a:[
+
+"溶解比較快",
+
+"溶解度變兩倍",
+
+"完全不能溶解",
+
+"水的重量變少"
+
+],
+
+c:0
+
+},
+
+{
+
+q:"60°C可溶80克，20°C只能溶30克。冷卻後最多析出多少克？",
+
+a:["30克","50克","80克","110克"],
+
+c:1
+
+},
+
+{
+
+q:"讓熱的飽和溶液產生晶體，常用的方法是？",
+
+a:["加熱","降溫","加水","不停攪拌"],
+
+c:1
+
+}
+
+];
+
+let n=0;
+
+let score=0;
+
+function show(){
+
+if(n>=questions.length){
+
+document.getElementById("question").innerHTML=
+
+"🎉 挑戰完成！<br><br>你的分數："+score+" 分";
+
+document.getElementById("answers").innerHTML=
+
+'<button onclick="location.reload()">再玩一次</button>';
+
+document.getElementById("result").innerHTML="";
+
+return;
+
+}
+
+let q=questions[n];
+
+document.getElementById("question").innerHTML=
+
+"第 "+(n+1)+" 題<br><br>"+q.q;
+
+let html="";
+
+q.a.forEach((x,i)=>{
+
+html+=
+
+'<button onclick="answer('+i+')">'+x+'</button>';
+
+});
+
+document.getElementById("answers").innerHTML=html;
+
+}
+
+function answer(i){
+
+let q=questions[n];
+
+if(i===q.c){
+
+score+=10;
+
+document.getElementById("result").innerHTML=
+
+"✅ 答對了！";
+
+document.getElementById("result").style.color="green";
+
+}else{
+
+document.getElementById("result").innerHTML=
+
+"❌ 答錯了！<br>正確答案："+q.a[q.c];
+
+document.getElementById("result").style.color="red";
+
+}
+
+document.getElementById("score").innerHTML=
+
+"分數："+score;
+
+n++;
+
+setTimeout(()=>{
+
+document.getElementById("result").innerHTML="";
+
+show();
+
+},1500);
+
+}
+
+show();
+
+</script>
+
+</body>
+
+</html>
